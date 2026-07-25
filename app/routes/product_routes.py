@@ -28,18 +28,6 @@ def get_home():
 
 @products_bp.route('/products', methods=['GET'])
 def get_products():
-    """
-    List products with filtering and pagination
-    
-    Query Parameters:
-        - category: Filter by category
-        - min_price: Filter by minimum price
-        - max_price: Filter by maximum price
-        - capacity: Filter by capacity in ml (e.g., 250, 500, 1000)
-        - page: Page number (default 1)
-        - limit: Items per page (default 12)
-        - search: Search by product title or description
-    """
     try:
         db = current_app.mongo.db
         

@@ -53,12 +53,10 @@ def create_app(config_name=None):
 
     # Initialize MongoDB
     mongo.init_app(app)
-    print("MONGO URI:", app.config["MONGO_URI"])
-    print("mongo.db:", mongo.db)
 
     # Store mongo instance in app for access in routes
     app.mongo = mongo
-    print("app.mongo:", app.mongo)
+
     # Register blueprints
     register_blueprints(app)
     
@@ -79,6 +77,12 @@ def register_blueprints(app):
     from app.routes.address_routes import addresses_bp
     from app.routes.order_routes import orders_bp
     from app.routes.admin_routes import admin_bp
+    from app.routes.admin_extended_routes import admin_extended_bp
+    from app.routes.category_routes import category_bp
+    from app.routes.marketing_routes import marketing_bp
+    from app.routes.media_routes import media_bp
+    from app.routes.wishlist_routes import wishlist_bp
+    from app.routes.review_routes import review_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(products_bp)
@@ -86,6 +90,12 @@ def register_blueprints(app):
     app.register_blueprint(addresses_bp)
     app.register_blueprint(orders_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(admin_extended_bp)
+    app.register_blueprint(category_bp)
+    app.register_blueprint(marketing_bp)
+    app.register_blueprint(media_bp)
+    app.register_blueprint(wishlist_bp)
+    app.register_blueprint(review_bp)
 
 
 def setup_database_indexes(app):
