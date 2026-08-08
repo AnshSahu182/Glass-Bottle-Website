@@ -6,7 +6,7 @@ PUT /api/addresses/<id> - Update address
 DELETE /api/addresses/<id> - Delete address
 """
 import os
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from bson.objectid import ObjectId
 from app.utils.auth import token_required, objectid_to_string
 from app.models.validators import AddressModel, validate_phone
@@ -21,7 +21,7 @@ def get_addresses(user_id, user_role):
     Get all addresses for logged-in user
     """
     try:
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         
         addresses = list(db.addresses.find({'user_id': user_oid}).sort('created_at', -1))
@@ -65,7 +65,7 @@ def add_address(user_id, user_role):
         if not validate_phone(phone):
             return jsonify({'error': 'Invalid phone number. Must be 10 digits.'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         
         # Check address count - STRICT RULE
@@ -107,7 +107,7 @@ def update_address(address_id, user_id, user_role):
         if not data:
             return jsonify({'error': 'Request body required'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         address_oid = ObjectId(address_id)
         
@@ -176,7 +176,7 @@ def delete_address(address_id, user_id, user_role):
         if not ObjectId.is_valid(address_id):
             return jsonify({'error': 'Invalid address ID'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         address_oid = ObjectId(address_id)
         

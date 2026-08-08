@@ -99,7 +99,7 @@ def get_product_detail(product_id):
         if not ObjectId.is_valid(product_id):
             return jsonify({'error': 'Invalid product ID'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         product = db.products.find_one({'_id': ObjectId(product_id)})
         
         if not product:

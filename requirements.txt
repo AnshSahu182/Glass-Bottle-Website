@@ -1,4 +1,5 @@
 Flask-PyMongo==3.0.1
+Flask-Cors==4.0.1
 PyJWT==2.8.0
 python-dotenv==1.0.0
 bcrypt==4.1.1
@@ -6,3 +7,5 @@ email-validator==2.1.0
 requests==2.31.0
 Werkzeug==3.0.1
 gunicorn==21.2.0
+boto3==1.34.69
+cloudinary==1.40.0

@@ -5,7 +5,7 @@ GET /api/orders - Get order history for user
 GET /api/orders/<id> - Get order details
 STRICT RULE: Orders cannot be edited or cancelled after creation
 """
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from bson.objectid import ObjectId
 from datetime import datetime
 from app.utils.auth import token_required, objectid_to_string
@@ -33,7 +33,7 @@ def create_order(user_id, user_role):
         if not address_id or not ObjectId.is_valid(address_id):
             return jsonify({'error': 'Valid address_id is required'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         address_oid = ObjectId(address_id)
         
@@ -114,7 +114,7 @@ def get_orders(user_id, user_role):
     Get order history for logged-in user
     """
     try:
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         
         # Get pagination parameters
@@ -157,7 +157,7 @@ def get_order_detail(order_id, user_id, user_role):
         if not ObjectId.is_valid(order_id):
             return jsonify({'error': 'Invalid order ID'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         order_oid = ObjectId(order_id)
         

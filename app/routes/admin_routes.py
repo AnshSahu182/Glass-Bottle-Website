@@ -3,7 +3,7 @@ Admin Routes
 Product CRUD, Featured Products, Order Status Management, User Management
 All routes require admin role
 """
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from bson.objectid import ObjectId
 from datetime import datetime
 from app.utils.auth import admin_required, objectid_to_string
@@ -21,7 +21,7 @@ def admin_get_products(user_id, user_role):
     Admin: Get all products
     """
     try:
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', 20, type=int)
@@ -64,10 +64,10 @@ def admin_create_product(user_id, user_role):
         # Required fields
         title = data.get('title', '').strip()
         description = data.get('description', '').strip()
-        price = data.get('price', type=float)
+        price = float(data['price']) if 'price' in data else None
         category = data.get('category', '').strip()
-        capacity_ml = data.get('capacity_ml', type=int)
-        stock = data.get('stock', type=int)
+        capacity_ml = int(data['capacity_ml']) if 'capacity_ml' in data else None
+        stock = int(data['stock']) if 'stock' in data else None
         images = data.get('images', [])
         is_featured = data.get('is_featured', False)
         
@@ -78,7 +78,7 @@ def admin_create_product(user_id, user_role):
         if price <= 0 or stock < 0 or capacity_ml <= 0:
             return jsonify({'error': 'Price and capacity must be positive, stock must be non-negative'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         
         # Create product
         product = ProductModel.create(
@@ -110,7 +110,7 @@ def admin_update_product(product_id, user_id, user_role):
         if not data:
             return jsonify({'error': 'Request body required'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         product_oid = ObjectId(product_id)
         
         # Check if product exists
@@ -184,7 +184,7 @@ def admin_delete_product(product_id, user_id, user_role):
         if not ObjectId.is_valid(product_id):
             return jsonify({'error': 'Invalid product ID'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         product_oid = ObjectId(product_id)
         
         result = db.products.delete_one({'_id': product_oid})
@@ -212,7 +212,7 @@ def admin_toggle_featured(product_id, user_id, user_role):
         if not data or 'is_featured' not in data:
             return jsonify({'error': 'is_featured field required'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         product_oid = ObjectId(product_id)
         
         is_featured = bool(data['is_featured'])
@@ -246,7 +246,7 @@ def admin_get_orders(user_id, user_role):
     Admin: Get all user orders with full details
     """
     try:
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', 20, type=int)
@@ -318,7 +318,7 @@ def admin_update_order_status(order_id, user_id, user_role):
         if new_status not in valid_statuses:
             return jsonify({'error': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         order_oid = ObjectId(order_id)
         
         # Update order status
@@ -350,7 +350,7 @@ def admin_get_users(user_id, user_role):
     Admin: Get all registered users with their details
     """
     try:
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', 20, type=int)
@@ -366,7 +366,11 @@ def admin_get_users(user_id, user_role):
         
         # Add address count for each user
         for user in users:
-            address_count = db.addresses.count_documents({'user_id': ObjectId(user['id'])})
+            user_oid_str = user.get('_id') or user.get('id')
+            try:
+                address_count = db.addresses.count_documents({'user_id': ObjectId(user_oid_str)})
+            except Exception:
+                address_count = 0
             user['address_count'] = address_count
         
         return jsonify({
@@ -393,7 +397,7 @@ def admin_get_user_detail(user_id, user_role):
         if not ObjectId.is_valid(user_id):
             return jsonify({'error': 'Invalid user ID'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         
         user = db.users.find_one({'_id': user_oid}, {'password': 0})

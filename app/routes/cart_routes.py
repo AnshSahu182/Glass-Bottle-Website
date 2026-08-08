@@ -6,7 +6,7 @@ PUT /api/cart/<item_id> - Update item quantity
 DELETE /api/cart/<item_id> - Remove item from cart
 DELETE /api/cart - Clear entire cart
 """
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from bson.objectid import ObjectId
 from app.utils.auth import token_required, objectid_to_string
 from app.models.validators import CartModel
@@ -21,7 +21,7 @@ def get_cart(user_id, user_role):
     View items in user's cart with product details and subtotal
     """
     try:
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         
         # Get or create cart
@@ -76,7 +76,7 @@ def add_to_cart(user_id, user_role):
             return jsonify({'error': 'Request body required'}), 400
         
         product_id = data.get('product_id', '').strip()
-        quantity = data.get('quantity', 1, type=int)
+        quantity = int(data.get('quantity', 1))
         
         # Validation
         if not product_id or not ObjectId.is_valid(product_id):
@@ -85,7 +85,7 @@ def add_to_cart(user_id, user_role):
         if quantity <= 0:
             return jsonify({'error': 'Quantity must be greater than 0'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         product_oid = ObjectId(product_id)
         
@@ -149,12 +149,12 @@ def update_cart_item(item_id, user_id, user_role):
         if not data:
             return jsonify({'error': 'Request body required'}), 400
         
-        new_quantity = data.get('quantity', type=int)
+        new_quantity = int(data['quantity']) if 'quantity' in data else None
         
         if not new_quantity or new_quantity <= 0:
             return jsonify({'error': 'Quantity must be greater than 0'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         item_oid = ObjectId(item_id)
         
@@ -198,7 +198,7 @@ def remove_cart_item(item_id, user_id, user_role):
         if not ObjectId.is_valid(item_id):
             return jsonify({'error': 'Invalid item ID'}), 400
         
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         item_oid = ObjectId(item_id)
         
@@ -228,7 +228,7 @@ def clear_cart(user_id, user_role):
     Clear entire cart for user
     """
     try:
-        db = request.app.mongo.db
+        db = current_app.mongo.db
         user_oid = ObjectId(user_id)
         
         # Delete or clear cart

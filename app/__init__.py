@@ -6,6 +6,7 @@ import os
 from datetime import timedelta
 from flask import Flask
 from flask_pymongo import PyMongo
+from flask_cors import CORS
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -51,6 +52,13 @@ def create_app(config_name=None):
         "PRODUCTS_PER_PAGE": int(os.getenv("PRODUCTS_PER_PAGE", 12)),
     })
 
+    # Configure CORS — allow frontend origins (local dev + deployed)
+    allowed_origins = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://localhost:5174,http://localhost:3000"
+    ).split(",")
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}}, supports_credentials=True)
+
     # Initialize MongoDB
     mongo.init_app(app)
 
@@ -83,6 +91,7 @@ def register_blueprints(app):
     from app.routes.media_routes import media_bp
     from app.routes.wishlist_routes import wishlist_bp
     from app.routes.review_routes import review_bp
+    from app.routes.upload_routes import upload_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(products_bp)
@@ -96,6 +105,7 @@ def register_blueprints(app):
     app.register_blueprint(media_bp)
     app.register_blueprint(wishlist_bp)
     app.register_blueprint(review_bp)
+    app.register_blueprint(upload_bp)
 
 
 def setup_database_indexes(app):
@@ -127,6 +137,12 @@ def setup_database_indexes(app):
             # OTP indexes
             db.otps.create_index('expires_at', expireAfterSeconds=0)  # Auto-delete expired OTPs
             db.otps.create_index('email')
+            
+            # Media indexes
+            db.media.create_index('folder')
+            db.media.create_index('type')
+            db.media.create_index('created_at')
+            db.media.create_index('public_id', unique=True, sparse=True)
             
             print("Database indexes created successfully")
         except Exception as e:

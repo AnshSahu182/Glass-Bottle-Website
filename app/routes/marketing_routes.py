@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from app.utils.auth import token_required, objectid_to_string
 
 marketing_bp = Blueprint('marketing', __name__, url_prefix='/api')
@@ -9,7 +9,7 @@ marketing_bp = Blueprint('marketing', __name__, url_prefix='/api')
 def apply_coupon(user_id, user_role):
     data = request.get_json() or {}
     code = data.get('code', '').strip()
-    db = request.app.mongo.db
+    db = current_app.mongo.db
     coupon = db.coupons.find_one({'code': code})
     if not coupon:
         return jsonify({'error': 'Coupon not found'}), 404
